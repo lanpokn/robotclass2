@@ -26,7 +26,6 @@ class GlobalPlanner:
         self.plan_oy = []
         self.plan_rx = []
         self.plan_ry = []
-
         # count to update map
         self.map_count = 0
 
