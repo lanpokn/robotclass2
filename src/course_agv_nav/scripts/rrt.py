@@ -1,5 +1,6 @@
 import os
 import math
+from pickle import FALSE
 import sys
 import random
 import matplotlib.pyplot as plt
@@ -8,9 +9,14 @@ import numpy as np
 
 
 
-path_step = 800
-
-
+path_step = 20
+data = np.ones([129,129])
+try:
+    # with np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.npy") as data2:
+    #     data = data2.copy()
+    data = np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.npy") 
+except:
+    print("load error!\n\n\n\n\n\n\n\n\n\n\n")
 
 class Node():
     def __init__(self,x,y,length = path_step,parent = None) :
@@ -42,47 +48,59 @@ pass
 
 class RRT():
     #try to use rrt*,*can't be a name of class
+    #no need for KDtree
     def __init__(self,):
 
-        self.minx = -4500
-        self.maxx = 4500
-        self.maxy = 3000
-        self.miny = -3000
+        self.minx = -129
+        self.maxx = 129
+        self.maxy = 129
+        self.miny = -129
         self.node_list = []
-        self.robot_size = 200
-
-        self.avoid_dist = 300
-        self.stop_distance = 900
+        #no use
+        # self.robot_size = 200
+        # self.avoid_dist = 300
+        
+        #no use too, try join the goal whenver possible
+        #self.stop_distance = 900
         self.path_step = path_step
         self.maxN = 1000
         pass
 
     def plan(self,vision,start_x,start_y,goal_x,goal_y):
-        obstacle_x,obstacle_y = [-999999],[-999999]
-        road_map = []
+        # #no KDtree anymore in obstcle
+        # obstacle_x,obstacle_y = [-999999],[-999999]
+        # road_map = []
 
-        for robot_blue in vision.blue_robot:
-            if robot_blue.visible and robot_blue.id>0:
-                obstacle_x.append(robot_blue.x)
-                obstacle_y.append(robot_blue.y)
-        for robot_yellow in vision.yellow_robot:
-            if robot_yellow.visible:
-                obstacle_x.append(robot_yellow.x)
-                obstacle_y.append(robot_yellow.y)
-        pass
+        # for robot_blue in vision.blue_robot:
+        #     if robot_blue.visible and robot_blue.id>0:
+        #         obstacle_x.append(robot_blue.x)
+        #         obstacle_y.append(robot_blue.y)
+        # for robot_yellow in vision.yellow_robot:
+        #     if robot_yellow.visible:
+        #         obstacle_x.append(robot_yellow.x)
+        #         obstacle_y.append(robot_yellow.y)
+        # pass
 
-        obstree = KDTree(np.vstack((obstacle_x,obstacle_y)).T)
+        # obstree = KDTree(np.vstack((obstacle_x,obstacle_y)).T)
 
 
         #generate tree
+        start_u,start_v = self.real_to_map(start_x,start_y)
+        goal_u,goal_v = self.real_to_map(goal_x,goal_y)
+        node_final,sample_u,sample_v= self.generate_tree(start_u,start_v,goal_u,goal_v)
+        path_u,path_v = node_final.return_path_to_root()
 
-        node_final,sample_x,sample_y= self.generate_tree(start_x,start_y,goal_x,goal_y,obstree)
-        path_x,path_y = node_final.return_path_to_root()
+        path_u_new,path_v_new = self.delete_node(path_u,path_v)
+        
+        #convert back
+        path_x,path_y = [],[]
+        for i in range(0,len(path_u)):
+            temp_x,temp_y = self.map_to_real(path_u[i],path_v[i])
+            path_x.append(temp_x)
+            path_y.append(temp_y)
+        return path_x,path_y
 
-        path_x_new,path_y_new = self.delete_node(path_x,path_y,obstree)
-        return path_x,path_y,road_map,sample_x,sample_y
-
-    def delete_node(self,path_x,path_y,obstree):
+    def delete_node(self,path_x,path_y,obstree = None):
         i = 0
         while(i<len(path_x)-2):
             node_temp_i = Node(path_x[i],path_y[i])
@@ -103,8 +121,8 @@ class RRT():
 
 
 
-    def generate_tree(self,start_x,start_y,goal_x,goal_y,obstree):
-
+    def generate_tree(self,start_x,start_y,goal_x,goal_y,obstree = None):
+        #no start point, goal in first
         node_final = Node(-999999,-999999)
         sample = []
         sample_x,sample_y = [],[]
@@ -118,9 +136,9 @@ class RRT():
         i = 0
         while(self.exit_status(node_final,goal_x,goal_y) and i<self.maxN):
             i = i+1
-            node_temp  =self.add_one_node(obstree) 
+            node_temp  =self.add_one_node() 
             if(node_temp!=None):
-                node_final_temp = self.search_qnew(node_temp,sample,sampletree,obstree)
+                node_final_temp = self.search_qnew(node_temp,sample,sampletree)
                 if(node_final_temp!=None):
                     node_final = node_final_temp
 
@@ -130,30 +148,45 @@ class RRT():
                     sampletree = KDTree(np.vstack((sample_x,sample_y)).T)
                     pass
             pass
+        #add goal to the sample
+        node_final_temp = Node(goal_x,goal_y,parent= node_final)
+        node_final = node_final_temp
+        sample_x.append(node_final.x)
+        sample_y.append(node_final.y)
+        sample.append(node_final)
+        # sampletree = KDTree(np.vstack((sample_x,sample_y)).T)
     
         return node_final,sample_x,sample_y
 
     def exit_status(self,node_final,goal_x,goal_y):
-
-        if( (abs(node_final.x-goal_x) < self.stop_distance) and 
-            (abs(node_final.y-goal_y) < self.stop_distance)):
+        # need to rewrite completely
+        
+        # if( (abs(node_final.x-goal_x) < self.stop_distance) and 
+        #     (abs(node_final.y-goal_y) < self.stop_distance)):
+        #     return False
+        # else:
+        #     return True
+        temp  = Node(goal_x,goal_y,parent=node_final)
+        if(self.check_obs(temp) == False):
             return False
         else:
             return True
+        pass
 
-    def add_one_node(self,obstree):
+    def add_one_node(self,obstree = None):
 
         tx = random.random()*(self.maxx-self.minx)+self.minx
         ty = random.random()*(self.maxy-self.miny)+self.miny
-        distance, index = obstree.query(np.array([tx,ty]))
+        # distance, index = obstree.query(np.array([tx,ty]))
 
-        if distance >= self.robot_size+self.avoid_dist:
+        #-1 is secure
+        if data[tx,ty] == -1:
             return Node(tx,ty)
         else:
             return None
     
     #
-    def check_obs(self,node,obstree):
+    def check_obs(self,node,obstree=None):
 
         #judge whether the node and its line to the parent can be add
 
@@ -163,19 +196,19 @@ class RRT():
         dy = node.y - y
         angle = math.atan2(dy,dx)
         dis = math.hypot(dx,dy)
-        step_size = self.robot_size+self.avoid_dist
-        steps = max(round(dis/step_size),20)
+        step_size = 6.45/2
+        steps = max(int(dis/step_size+0.5),10)
         for i in range(steps):
-            distance,index = obstree.query(np.array([x,y]))
-            if distance <= step_size:
+            if (data[int(x+0.5),int(y+0.5)] == 100):
                 return True
 
             x+= dis/steps*math.cos(angle)
             y+= dis/steps*math.sin(angle)
-            
+        
+        return False
         pass
 
-    def search_qnew(self,node,sample,sampletree,obstree):
+    def search_qnew(self,node,sample,sampletree,obstree = None):
 
         #find qnear, this may cost a lot time ,so try to optimize
 
@@ -198,6 +231,15 @@ class RRT():
             else:
                 return node_final
 
+    #added for robot2
+    def real_to_map(x,y):
+        u = int((x+10)/0.155+0.5)
+        v = int((y+10)/0.155+0.5)
+        return u,v
+
+    def map_to_real(u,v):
+        x=u*0.155-10
+        y=v*0.155-10
     pass
 
 class test():
@@ -210,6 +252,7 @@ class test():
         pass
          
     def planning(self,plan_sx,plan_sy,plan_gx,plan_gy):
+        #need to convert to map matrix
         path_x,path_y = [],[]
         xdiff = plan_gx-plan_sx
         ydiff = plan_gy-plan_sy
@@ -219,8 +262,9 @@ class test():
             path_y.append(plan_sy+i/self.length*ydiff)
         path_x = list(reversed(path_x))
         path_y = list(reversed(path_y))
-        print(path_x)
+        print(plan_gx,plan_gy)
         #goal shoule be in front
+        print(data)
         return path_x,path_y
             
             
