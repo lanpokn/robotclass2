@@ -21,7 +21,6 @@ try:
 except:
     print("load error!\n\n\n\n\n\n\n\n\n\n\n")
 np.savetxt("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.txt",data)
-print(data)
 class Node():
     def __init__(self,x,y,length = path_step,parent = None) :
         self.x = x
@@ -120,19 +119,32 @@ class RRT():
 
     def delete_node(self,path_x,path_y,obstree = None):
         i = 0
-        while(i<len(path_x)-2):
+        flag = 0
+        while(True):
+            flag = 0
+            print(len(path_x))
+            if(i>len(path_x)-3):
+                break
             node_temp_i = Node(path_x[i],path_y[i])
-            for j in range(i+2,len(path_x)):
-                node_temp_j = Node(path_x[j],path_y[j],parent=node_temp_i)
-                if(j==len(path_x)-1):
-                        i+=1
-                if(self.check_obs(node_temp_j,obstree)):
-                    continue
-                else:
-                    for k in range(i+1,j):
-                        path_x.remove(path_x[k])
-                        path_y.remove(path_y[k])
+            print("i=",i)
+            while(True):
+                if(flag==1):
                     break
+                for j in range(i+2,len(path_x)):
+                    print("j=",j)
+                    if(j>len(path_x)-2):
+                        flag = 1
+                    node_temp_j = Node(path_x[j],path_y[j],parent=node_temp_i)
+                    # if(j==len(path_x)-1):
+                    #         i+=1
+                    if(self.check_obs(node_temp_j,obstree) == True):
+                        continue
+                    else:
+                        for k in range(i+1,j):
+                            del path_x[i+1]
+                            del path_y[i+1]
+                        break
+            i = i+1
         
         return path_x,path_y
                 
@@ -218,7 +230,6 @@ class RRT():
         # in map system ,this should be 0.5
         step_size = 0.5
         steps = max([int(dis/step_size+0.5),100])
-        print(steps)
         for i in range(steps):
             if (data[int(x+0.5),int(y+0.5)] == 100):
                 return True
