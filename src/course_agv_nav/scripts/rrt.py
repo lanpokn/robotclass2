@@ -9,12 +9,15 @@ import numpy as np
 
 
 # y and v are just inverse!,in data
-path_step = 20
-data = np.ones([129,129])
+path_step = 7
+data_high_secure = np.ones([129,129])
+data_low_secure = np.ones([129,129])
 try:
     # with np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.npy") as data2:
     #     data = data2.copy()
-    data = np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.npy") 
+    data_high_secure = np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.npy") 
+    data_low_secure = np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map.npy")
+    data = data_high_secure
 except:
     print("load error!\n\n\n\n\n\n\n\n\n\n\n")
 np.savetxt("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.txt",data)
@@ -65,7 +68,7 @@ class RRT():
         #no use too, try join the goal whenver possible
         #self.stop_distance = 900
         self.path_step = path_step
-        self.maxN = 200
+        self.maxN = 2000
         pass
 
     def planning(self,start_x,start_y,goal_x,goal_y,vision = None):
@@ -87,9 +90,17 @@ class RRT():
 
 
         #generate tree
+        data = data_high_secure
         print(data)
         start_u,start_v = self.real_to_map(start_x,start_y)
         goal_u,goal_v = self.real_to_map(goal_x,goal_y)
+        
+        if(data[goal_u,goal_v] == 100):
+            data = data_low_secure
+            if(data[goal_u,goal_v] == 100):
+                print("can't reach!!")
+                return [start_x],[start_y]
+            
         node_final,sample_u,sample_v= self.generate_tree(start_u,start_v,goal_u,goal_v)
         path_u,path_v = node_final.return_path_to_root()
 
@@ -206,7 +217,8 @@ class RRT():
         dis = math.hypot(dx,dy)
         # in map system ,this should be 0.5
         step_size = 0.5
-        steps = max(int(dis/step_size+0.5),10)
+        steps = max([int(dis/step_size+0.5),100])
+        print(steps)
         for i in range(steps):
             if (data[int(x+0.5),int(y+0.5)] == 100):
                 return True
