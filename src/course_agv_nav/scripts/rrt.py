@@ -8,7 +8,7 @@ from scipy.spatial import KDTree
 import numpy as np
 
 
-
+# y and v are just inverse!,in data
 path_step = 20
 data = np.ones([129,129])
 try:
@@ -17,7 +17,8 @@ try:
     data = np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.npy") 
 except:
     print("load error!\n\n\n\n\n\n\n\n\n\n\n")
-
+np.savetxt("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.txt",data)
+print(data)
 class Node():
     def __init__(self,x,y,length = path_step,parent = None) :
         self.x = x
@@ -52,10 +53,10 @@ class RRT():
     #no need for KDtree
     def __init__(self,):
 
-        self.minx = -129
-        self.maxx = 129
-        self.maxy = 129
-        self.miny = -129
+        self.minx = 0
+        self.maxx = 128
+        self.maxy = 128
+        self.miny = 0
         self.node_list = []
         #no use
         # self.robot_size = 200
@@ -86,6 +87,7 @@ class RRT():
 
 
         #generate tree
+        print(data)
         start_u,start_v = self.real_to_map(start_x,start_y)
         goal_u,goal_v = self.real_to_map(goal_x,goal_y)
         node_final,sample_u,sample_v= self.generate_tree(start_u,start_v,goal_u,goal_v)
@@ -101,8 +103,8 @@ class RRT():
             path_y.append(temp_y)
         path_x = list(reversed(path_x))
         path_y = list(reversed(path_y))
-        path_x.pop()
-        path_y.pop()
+        # path_x.pop()
+        # path_y.pop()
         return path_x,path_y
 
     def delete_node(self,path_x,path_y,obstree = None):
@@ -139,7 +141,7 @@ class RRT():
 
 
         i = 0
-        while(self.exit_status(node_final,goal_x,goal_y) and i<self.maxN):
+        while(self.exit_status(node_final,goal_x,goal_y)==False and i<self.maxN):
             i = i+1
             node_temp  =self.add_one_node() 
             if(node_temp!=None):
@@ -173,9 +175,9 @@ class RRT():
         #     return True
         temp  = Node(goal_x,goal_y,parent=node_final)
         if(self.check_obs(temp) == False):
-            return False
-        else:
             return True
+        else:
+            return False
         pass
 
     def add_one_node(self,obstree = None):
@@ -202,7 +204,8 @@ class RRT():
         dy = node.y - y
         angle = math.atan2(dy,dx)
         dis = math.hypot(dx,dy)
-        step_size = 6.45/2
+        # in map system ,this should be 0.5
+        step_size = 0.5
         steps = max(int(dis/step_size+0.5),10)
         for i in range(steps):
             if (data[int(x+0.5),int(y+0.5)] == 100):
@@ -239,13 +242,13 @@ class RRT():
 
     #added for robot2
     def real_to_map(self,x,y):
-        u = int((x+10)/0.155+0.5)
-        v = int((y+10)/0.155+0.5)
+        v = int((x+10)/0.155+0.5)
+        u = int((y+10)/0.155+0.5)
         return u,v
 
     def map_to_real(self,u,v):
-        x=u*0.155-10
-        y=v*0.155-10
+        y=u*0.155-10
+        x=v*0.155-10
         return x,y
     pass
 

@@ -12,7 +12,7 @@ if __name__ == "__main__":
     # print(data[:,4])
     
     
-    # data1 = np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map.npy")
+    data1 = np.load("/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob.npy")
     # data2 = np.zeros(shape = (129,129))
     # avoid_dist = 2
     # for i in range(0,129):
@@ -32,9 +32,9 @@ if __name__ == "__main__":
     #             else:
     #                 data2[i][j] = 100
     # np.save('/home/lanpokn/Documents/2021/robot2/course2021-Robotics2-master/map_ob',data2) 
-    # print(data2[:,65])
-    data1 = np.array([[1,2],[3,4]])
-    data2 = data1.copy()
-    data1[0,0] = 0
-    print(data2)
+    print(data1[:,10])
+    # data1 = np.array([[1,2],[3,4]])
+    # data2 = data1.copy()
+    # data1[0,0] = 0
+    # print(data2)
     
