@@ -64,10 +64,10 @@ class RRT():
         #no use too, try join the goal whenver possible
         #self.stop_distance = 900
         self.path_step = path_step
-        self.maxN = 1000
+        self.maxN = 200
         pass
 
-    def plan(self,vision,start_x,start_y,goal_x,goal_y):
+    def planning(self,start_x,start_y,goal_x,goal_y,vision = None):
         # #no KDtree anymore in obstcle
         # obstacle_x,obstacle_y = [-999999],[-999999]
         # road_map = []
@@ -95,8 +95,8 @@ class RRT():
         
         #convert back
         path_x,path_y = [],[]
-        for i in range(0,len(path_u)):
-            temp_x,temp_y = self.map_to_real(path_u[i],path_v[i])
+        for i in range(0,len(path_u_new)):
+            temp_x,temp_y = self.map_to_real(path_u_new[i],path_v_new[i])
             path_x.append(temp_x)
             path_y.append(temp_y)
         path_x = list(reversed(path_x))
@@ -128,7 +128,7 @@ class RRT():
 
     def generate_tree(self,start_x,start_y,goal_x,goal_y,obstree = None):
         #no start point, goal in first
-        node_final = Node(-999999,-999999)
+        node_final = Node(start_x,start_y)
         sample = []
         sample_x,sample_y = [],[]
 
@@ -185,8 +185,9 @@ class RRT():
         # distance, index = obstree.query(np.array([tx,ty]))
 
         #-1 is secure
+        tx,ty = int(tx+0.5),int(ty+0.5)
         if data[tx,ty] == -1:
-            return Node(int(tx+0.5),int(ty+0.5))
+            return Node(tx,ty)
         else:
             return None
     
@@ -237,14 +238,15 @@ class RRT():
                 return node_final
 
     #added for robot2
-    def real_to_map(x,y):
+    def real_to_map(self,x,y):
         u = int((x+10)/0.155+0.5)
         v = int((y+10)/0.155+0.5)
         return u,v
 
-    def map_to_real(u,v):
+    def map_to_real(self,u,v):
         x=u*0.155-10
         y=v*0.155-10
+        return x,y
     pass
 
 class test():
