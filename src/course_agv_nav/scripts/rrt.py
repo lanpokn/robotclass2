@@ -36,6 +36,7 @@ class Node():
             path_x.append(temp.x)
             path_y.append(temp.y)
             temp = temp.parent
+
         path_x.append(temp.x)
         path_y.append(temp.y)
 
@@ -98,6 +99,10 @@ class RRT():
             temp_x,temp_y = self.map_to_real(path_u[i],path_v[i])
             path_x.append(temp_x)
             path_y.append(temp_y)
+        path_x = list(reversed(path_x))
+        path_y = list(reversed(path_y))
+        path_x.pop()
+        path_y.pop()
         return path_x,path_y
 
     def delete_node(self,path_x,path_y,obstree = None):
@@ -181,7 +186,7 @@ class RRT():
 
         #-1 is secure
         if data[tx,ty] == -1:
-            return Node(tx,ty)
+            return Node(int(tx+0.5),int(ty+0.5))
         else:
             return None
     

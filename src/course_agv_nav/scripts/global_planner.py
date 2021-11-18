@@ -77,7 +77,7 @@ class GlobalPlanner:
         self.plan_oy = (oy*self.map.info.resolution+self.map.info.origin.position.y).tolist()
         ## TODO init your planner
         ## e.g. self.planner = Planner(...)
-        self.planner = test()
+        self.planner = RRT()
 
     def mapCallback(self,msg):
         self.map = msg
