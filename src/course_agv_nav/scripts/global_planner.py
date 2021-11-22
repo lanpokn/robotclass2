@@ -33,7 +33,7 @@ class GlobalPlanner:
         self.goal_sub = rospy.Subscriber('/course_agv/goal',PoseStamped,self.goalCallback)
         self.plan_srv = rospy.Service('/course_agv/global_plan',Plan,self.replan)
         self.path_pub = rospy.Publisher('/course_agv/global_path',Path,queue_size = 1)
-        self.map_sub = rospy.Subscriber('/slam_map',OccupancyGrid,self.mapCallback)
+        self.map_sub = rospy.Subscriber('/map',OccupancyGrid,self.mapCallback)
         self.updateMap()
         # self.updateGlobalPose()
 
@@ -50,8 +50,8 @@ class GlobalPlanner:
         self.replan(0)
     def updateGlobalPose(self):
         try:
-            self.tf.waitForTransform("/map", "/robot_base", rospy.Time(), rospy.Duration(4.0))
-            (self.trans,self.rot) = self.tf.lookupTransform('/map','/robot_base',rospy.Time(0))
+            self.tf.waitForTransform("/map", "/base_footprint", rospy.Time(), rospy.Duration(4.0))
+            (self.trans,self.rot) = self.tf.lookupTransform('/map','/base_footprint',rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             print("get tf error!")
         self.plan_sx = self.trans[0]
@@ -71,8 +71,8 @@ class GlobalPlanner:
         res = True
         return PlanResponse(res)
     def initPlanner(self):
-        map_data = np.array(self.map.data).reshape((-1,self.map.info.height)).transpose()
-        ox,oy = np.nonzero(map_data > 50)
+        map_data = np.array(self.map.data).reshape((self.map.info.height,-1)).transpose()
+        ox,oy = np.nonzero(map_data != 0)
         self.plan_ox = (ox*self.map.info.resolution+self.map.info.origin.position.x).tolist()
         self.plan_oy = (oy*self.map.info.resolution+self.map.info.origin.position.y).tolist()
         ## TODO init your planner
