@@ -90,7 +90,7 @@ class RRT():
 
         #generate tree
         data = data_high_secure
-        print(data)
+        # print(data)
         start_u,start_v = self.real_to_map(start_x,start_y)
         goal_u,goal_v = self.real_to_map(goal_x,goal_y)
         
@@ -115,6 +115,7 @@ class RRT():
         path_y = list(reversed(path_y))
         # path_x.pop()
         # path_y.pop()
+        print("well done in rrt")
         return path_x,path_y
 
     def delete_node(self,path_x,path_y,obstree = None):
@@ -122,16 +123,16 @@ class RRT():
         flag = 0
         while(True):
             flag = 0
-            print(len(path_x))
+            #print(len(path_x))
             if(i>len(path_x)-3):
                 break
             node_temp_i = Node(path_x[i],path_y[i])
-            print("i=",i)
+            # print("i=",i)
             while(True):
                 if(flag==1):
                     break
                 for j in range(i+2,len(path_x)):
-                    print("j=",j)
+                    # print("j=",j)
                     if(j>len(path_x)-2):
                         flag = 1
                     node_temp_j = Node(path_x[j],path_y[j],parent=node_temp_i)

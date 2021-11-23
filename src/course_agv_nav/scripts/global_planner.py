@@ -30,7 +30,9 @@ class GlobalPlanner:
         self.map_count = 0
 
         self.tf = tf.TransformListener()
+        print(1)
         self.goal_sub = rospy.Subscriber('/course_agv/goal',PoseStamped,self.goalCallback)
+        print(2)
         self.plan_srv = rospy.Service('/course_agv/global_plan',Plan,self.replan)
         self.path_pub = rospy.Publisher('/course_agv/global_path',Path,queue_size = 1)
         self.map_sub = rospy.Subscriber('/map',OccupancyGrid,self.mapCallback)
@@ -42,7 +44,7 @@ class GlobalPlanner:
         self.plan_goal = msg
         self.plan_gx = msg.pose.position.x
         self.plan_gy = msg.pose.position.y
-        # print("get new goal!!! ",self.plan_goal)
+        print("get new goal!!! ",self.plan_goal)
         self.replan(0)
         pass
 

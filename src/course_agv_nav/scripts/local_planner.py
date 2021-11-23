@@ -10,7 +10,7 @@ from geometry_msgs.msg import PoseStamped, Twist
 from sensor_msgs.msg import LaserScan
 
 #dwa是要自己写吗？
-from dwa import DWAPlanner
+from dwa import *
 
 from threading import Lock, Thread
 from pynput import keyboard
