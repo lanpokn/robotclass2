@@ -31,6 +31,7 @@ class GlobalPlanner:
 
         self.tf = tf.TransformListener()
         print(1)
+        print(1)
         self.goal_sub = rospy.Subscriber('/course_agv/goal',PoseStamped,self.goalCallback)
         print(2)
         self.plan_srv = rospy.Service('/course_agv/global_plan',Plan,self.replan)
@@ -39,8 +40,8 @@ class GlobalPlanner:
         self.updateMap()
         # self.updateGlobalPose()
 
-        pass
     def goalCallback(self,msg):
+        print(111111111111)
         self.plan_goal = msg
         self.plan_gx = msg.pose.position.x
         self.plan_gy = msg.pose.position.y
@@ -100,6 +101,7 @@ class GlobalPlanner:
         path.header.seq = 0
         path.header.stamp = rospy.Time(0)
         path.header.frame_id = 'map'
+        print("good")
         for i in range(len(self.plan_rx)):
             pose = PoseStamped()
             pose.header.seq = i
@@ -120,6 +122,7 @@ def main():
     rospy.init_node('global_planner')
     gp = GlobalPlanner()
     rospy.spin()
+    print(22222222222222)
     pass
 
 if __name__ == '__main__':

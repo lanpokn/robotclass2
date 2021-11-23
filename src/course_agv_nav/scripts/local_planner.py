@@ -68,6 +68,7 @@ class LocalPlanner:
         self.planner_thread = None
         self.listener = keyboard.Listener(on_press=self.on_press)
         # self.listener.start()
+        print(33333333333333333)
 
     def on_press(self, key):
         
@@ -147,7 +148,7 @@ class LocalPlanner:
 
     # get path & initPlaning
     def pathCallback(self, msg):
-        # print("get path msg!!!!!",msg)
+        print("get path msg!!!!!",msg)
         self.path = msg
         self.lock.acquire()
         self.initPlanning()
@@ -159,6 +160,7 @@ class LocalPlanner:
         self.planThreadFunc()
 
     def initPlanning(self):
+        print("intodwa")
         self.goal_index = 0
         self.vx = 0.0
         self.vw = 0.0
@@ -225,6 +227,7 @@ class LocalPlanner:
 
 
 def main():
+    # print("local")
     rospy.init_node('path_Planning')
     lp = LocalPlanner()
     rospy.spin()

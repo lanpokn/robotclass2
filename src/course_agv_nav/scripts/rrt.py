@@ -45,6 +45,7 @@ class Node():
 
         path_x = list(reversed(path_x))
         path_y = list(reversed(path_y))
+        print(path_x)
         return path_x,path_y
     
 pass
@@ -298,7 +299,7 @@ class test():
         path_y = list(reversed(path_y))
         print(plan_gx,plan_gy)
         #goal shoule be in front
-        print(data)
+        #print(data)
         return path_x,path_y
             
             

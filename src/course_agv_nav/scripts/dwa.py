@@ -15,10 +15,10 @@ class DWAPlanner():
         #parameter of dwa
         self.vmin = -0.2
         self.vmax = 0.2
-        self.wmin = -3
-        self.wmax = 3
+        self.wmin = -0.6
+        self.wmax = 0.6
         self.vstep = 0.01
-        self.wstep = 0.1
+        self.wstep = 0.03
         self.vdotup = 0.5
         self.vdotdown = 1
         self.wdot = 0.2
@@ -35,15 +35,16 @@ class DWAPlanner():
         # Update plan_x [x(m), y(m), yaw(rad), v(m/s), omega(rad/s)]
         #self.plan_x = [self.x,self.y,self.yaw, self.vx, self.vw]
         #TODO,what is obstcle,waht is map
+        print(plan_goal)
         vsteps = int((self.vmax-self.vmin)/self.vstep)
         wsteps = int((self.wmax-self.wmin)/self.wstep)
-        u = []
+        u = [0,0.2]
         for i in range(0,vsteps):
             vtemp = self.vmin+i*self.vstep
             for j in range(0,wsteps):
                 wtemp = self.wmin+j*self.wstep
                 #TODO
-                if(check_velocity(vtemp,wtemp)):
+                if(self.check_velocity(vtemp,wtemp)):
                     pass
                 pass
         return u
@@ -69,7 +70,8 @@ class DWAPlanner():
             if(temp>G(max_index)):
                 max_index = i
         return u[max_index]
-            
+    def check_velocity(self,v,w,plan_ob):
+        pass
         
     def heading(self,v,w):
         theta2 = self.stheta+w*self.dt
