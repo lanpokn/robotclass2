@@ -9,7 +9,7 @@ import numpy as np
 
 
 # y and v are just inverse!,in data
-path_step = 7
+path_step = 7/6.3
 data_high_secure = np.ones([129,129])
 data_low_secure = np.ones([129,129])
 try:
@@ -45,7 +45,6 @@ class Node():
 
         path_x = list(reversed(path_x))
         path_y = list(reversed(path_y))
-        print(path_x)
         return path_x,path_y
     
 pass
@@ -56,14 +55,14 @@ class RRT():
     #no need for KDtree
     def __init__(self,):
 
-        self.minx = 0
-        self.maxx = 128
-        self.maxy = 128
-        self.miny = 0
+        self.minx = -64/6.3
+        self.maxx = 64/6.3
+        self.maxy = 64/6.3
+        self.miny = -64/6.3
         self.node_list = []
         #no use
-        # self.robot_size = 200
-        # self.avoid_dist = 300
+        self.robot_size = 0.1
+        self.avoid_dist = 0.2
         
         #no use too, try join the goal whenver possible
         #self.stop_distance = 900
@@ -71,52 +70,39 @@ class RRT():
         self.maxN = 2000
         pass
 
-    def planning(self,start_x,start_y,goal_x,goal_y,vision = None):
-        # #no KDtree anymore in obstcle
-        # obstacle_x,obstacle_y = [-999999],[-999999]
-        # road_map = []
+    def planning(self,start_x,start_y,goal_x,goal_y,plan_ox,plan_oy,vision = None):
 
-        # for robot_blue in vision.blue_robot:
-        #     if robot_blue.visible and robot_blue.id>0:
-        #         obstacle_x.append(robot_blue.x)
-        #         obstacle_y.append(robot_blue.y)
-        # for robot_yellow in vision.yellow_robot:
-        #     if robot_yellow.visible:
-        #         obstacle_x.append(robot_yellow.x)
-        #         obstacle_y.append(robot_yellow.y)
-        # pass
-
-        # obstree = KDTree(np.vstack((obstacle_x,obstacle_y)).T)
+        obstree = KDTree(np.vstack((plan_ox,plan_oy)).T)
 
 
         #generate tree
-        data = data_high_secure
+        # data = data_high_secure
         # print(data)
-        start_u,start_v = self.real_to_map(start_x,start_y)
-        goal_u,goal_v = self.real_to_map(goal_x,goal_y)
+        # start_u,start_v = self.real_to_map(start_x,start_y)
+        # goal_u,goal_v = self.real_to_map(goal_x,goal_y)
         
-        if(data[goal_u,goal_v] == 100):
-            data = data_low_secure
-            if(data[goal_u,goal_v] == 100):
-                print("can't reach!!")
-                return [start_x],[start_y]
+        # if(data[goal_u,goal_v] == 100):
+        #     data = data_low_secure
+        #     if(data[goal_u,goal_v] == 100):
+        #         print("can't reach!!")
+        #         return [start_x],[start_y]
             
-        node_final,sample_u,sample_v= self.generate_tree(start_u,start_v,goal_u,goal_v)
+        node_final,sample_u,sample_v= self.generate_tree(start_x,start_y,goal_x,goal_y,obstree=obstree)
         path_u,path_v = node_final.return_path_to_root()
 
-        path_u_new,path_v_new = self.delete_node(path_u,path_v)
+        path_u_new,path_v_new = self.delete_node(path_u,path_v,obstree)
         
         #convert back
         path_x,path_y = [],[]
         for i in range(0,len(path_u_new)):
-            temp_x,temp_y = self.map_to_real(path_u_new[i],path_v_new[i])
+            #temp_x,temp_y = self.map_to_real(path_u_new[i],path_v_new[i])
+            temp_x,temp_y = path_u_new[i],path_v_new[i]
             path_x.append(temp_x)
             path_y.append(temp_y)
         path_x = list(reversed(path_x))
         path_y = list(reversed(path_y))
         # path_x.pop()
         # path_y.pop()
-        print("well done in rrt")
         return path_x,path_y
 
     def delete_node(self,path_x,path_y,obstree = None):
@@ -124,16 +110,16 @@ class RRT():
         flag = 0
         while(True):
             flag = 0
-            #print(len(path_x))
+            print(len(path_x))
             if(i>len(path_x)-3):
                 break
             node_temp_i = Node(path_x[i],path_y[i])
-            # print("i=",i)
+            print("i=",i)
             while(True):
                 if(flag==1):
                     break
                 for j in range(i+2,len(path_x)):
-                    # print("j=",j)
+                    print("j=",j)
                     if(j>len(path_x)-2):
                         flag = 1
                     node_temp_j = Node(path_x[j],path_y[j],parent=node_temp_i)
@@ -166,11 +152,11 @@ class RRT():
 
 
         i = 0
-        while(self.exit_status(node_final,goal_x,goal_y)==False and i<self.maxN):
+        while(self.exit_status(node_final,goal_x,goal_y,obstree)==False and i<self.maxN):
             i = i+1
-            node_temp  =self.add_one_node() 
+            node_temp  =self.add_one_node(obstree=obstree) 
             if(node_temp!=None):
-                node_final_temp = self.search_qnew(node_temp,sample,sampletree)
+                node_final_temp = self.search_qnew(node_temp,sample,sampletree,obstree=obstree)
                 if(node_final_temp!=None):
                     node_final = node_final_temp
 
@@ -190,7 +176,7 @@ class RRT():
     
         return node_final,sample_x,sample_y
 
-    def exit_status(self,node_final,goal_x,goal_y):
+    def exit_status(self,node_final,goal_x,goal_y,obstree):
         # need to rewrite completely
         
         # if( (abs(node_final.x-goal_x) < self.stop_distance) and 
@@ -199,7 +185,7 @@ class RRT():
         # else:
         #     return True
         temp  = Node(goal_x,goal_y,parent=node_final)
-        if(self.check_obs(temp) == False):
+        if(self.check_obs(temp,obstree=obstree) == False):
             return True
         else:
             return False
@@ -212,7 +198,8 @@ class RRT():
         # distance, index = obstree.query(np.array([tx,ty]))
 
         #-1 is secure
-        tx,ty = int(tx+0.5),int(ty+0.5)
+        #TODO
+        #tx,ty = int(tx+0.5),int(ty+0.5)
         if data[tx,ty] == -1:
             return Node(tx,ty)
         else:
@@ -233,6 +220,7 @@ class RRT():
         step_size = 0.5
         steps = max([int(dis/step_size+0.5),100])
         for i in range(steps):
+            #TODO
             if (data[int(x+0.5),int(y+0.5)] == 100):
                 return True
 
@@ -299,7 +287,7 @@ class test():
         path_y = list(reversed(path_y))
         print(plan_gx,plan_gy)
         #goal shoule be in front
-        #print(data)
+        print(data)
         return path_x,path_y
             
             
